@@ -5,7 +5,6 @@ import { gsap } from "gsap";
 const StyledHeader = styled.header`
   position: absolute;
   width: 100%;
-  z-index: 10;
   padding: 0 4vw;
   .header__outer {
     max-width: 1417px;
@@ -22,6 +21,7 @@ const StyledHeader = styled.header`
     }
   }
   .header__hamburger {
+    z-index: 10;
     cursor: pointer;
     display: block;
     span {

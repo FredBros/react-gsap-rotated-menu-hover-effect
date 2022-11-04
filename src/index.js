@@ -17,8 +17,8 @@ ${reset}
  -moz-osx-font-smoothing: grayscale;
  }
  html, body {
- /* cursor: none; */
- background: #e1dfdd;
+ cursor: none;
+ /* background: #e1dfdd; */
   }
  * {
  min-height: 0;

@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import styled from "styled-components";
 import { gsap } from "gsap";
 
@@ -43,7 +43,18 @@ const StyledProjectItem = styled.a`
   }
 `;
 
-function MenuItems({ name, bgcolor, src }) {
+function MenuItems({
+  name,
+  bgcolor,
+  src,
+  innerRef,
+  outerRef,
+  backgroundRef,
+  projectsRef,
+}) {
+  const wordRef = useRef();
+  const wordRefClone = useRef();
+
   //useLayoutEffect instead of useEffect to avoid flash if componounts are mounted before CSS
   useLayoutEffect(() => {
     //! overflow : hidden to avoid scroll bar when menu is open
@@ -61,14 +72,171 @@ function MenuItems({ name, bgcolor, src }) {
       document.body.style.overflow = "visible";
     };
   }, []);
+
+  const handleMouseEnter = (event) => {
+    //destructure image and color from the dataset
+    const { image, color } = event.target.dataset;
+    const getAllProjectsItems = gsap.utils.toArray(".project__item");
+    const getSiblings = getAllProjectsItems.filter(
+      (item) => item !== event.target
+    );
+    //create the timeline
+    const tlEnter = gsap.timeline({
+      defaults: {
+        duration: 1,
+        ease: "none",
+        onStart: () => {
+          gsap.set(innerRef.current, {
+            backgroundImage: `url(${image})`,
+          });
+          gsap.to(backgroundRef.current, {
+            backgroundColor: color,
+            duration: 1,
+            ease: "expo",
+          });
+        },
+      },
+    });
+    tlEnter
+      .to(outerRef.current, {
+        duration: 1.3,
+        ease: "expo",
+        autoAlpha: 1,
+      })
+      .to(
+        innerRef.current,
+        {
+          duration: 1.3,
+          ease: "expo",
+          startAt: { scale: 1.2 },
+          scale: 1,
+        },
+        0
+      )
+      .to(
+        getSiblings,
+        {
+          autoAlpha: 0.2,
+        },
+        0
+      )
+      .to(wordRef.current.children, {
+        y: "100%",
+        rotationX: -90,
+        opacity: 0,
+        duration: 0.5,
+        ease: "power2",
+        stagger: 0.025,
+      },0)
+      .to(
+        wordRefClone.current.children,
+        {
+          startAt: { y: "-100%", rotationX: 90, opacity: 0 },
+          y: "0%",
+          rotationX: 0,
+          opacity: 1,
+          duration: 0.5,
+          ease: "power2",
+          stagger: 0.025,
+        },
+        0
+      );
+  };
+
+  const handleMouseLeave = () => {
+    const getAllProjectsItems = gsap.utils.toArray(".project__item");
+    const tlLeave = gsap.timeline({
+      defaults: {
+        duration: 1,
+        ease: "none",
+      },
+    });
+    tlLeave
+      .to(outerRef.current, {
+        autoAlpha: 0,
+      })
+      .to(
+        getAllProjectsItems,
+        {
+          autoAlpha: 1,
+        },
+        0
+      )
+      .to(wordRef.current.children, {
+        startAt: { y: "100%", rotationX: -90, opacity: 0 },
+
+        y: "0%",
+        rotationX: 0,
+        opacity: 1,
+        duration: 0.5,
+        ease: "power2",
+        stagger: 0.025,
+      },0)
+      .to(
+        wordRefClone.current.children,
+        {
+          y: "-100%",
+          rotationX: 90,
+          opacity: 0,
+          duration: 0.5,
+          ease: "power2",
+          stagger: 0.025,
+        },
+        0
+      );
+  };
+
+  const handleMouseMove = ({ clientX, clientY }) => {
+    const bound = projectsRef.current.getBoundingClientRect();
+    const xVal = clientX - (bound.left + Math.floor(bound.width / 2));
+    const yVal = clientY - (bound.top + Math.floor(bound.height / 2));
+
+    gsap.to(outerRef.current, {
+      duration: 1.2,
+      x: xVal,
+      y: yVal,
+      ease: "none",
+    });
+  };
+
   return (
     <StyledProjectItem
       href=""
       className="project__item"
       data-color={bgcolor}
       data-image={src}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
     >
-      <span className="project__item-text">{name}</span>
+      <span className="project__item-text">
+        <span className="word" ref={wordRef}>
+          {name.split("").map((item, i) => {
+            return (
+              <span
+                key={i}
+                className="char"
+                style={{ display: "inline-block", willChange: "transform" }}
+              >
+                {item}
+              </span>
+            );
+          })}
+        </span>
+        <span className="word clone" ref={wordRefClone}>
+          {name.split("").map((item, i) => {
+            return (
+              <span
+                key={i}
+                className="char"
+                style={{ display: "inline-block", willChange: "transform" }}
+              >
+                {item}
+              </span>
+            );
+          })}
+        </span>
+      </span>
     </StyledProjectItem>
   );
 }
